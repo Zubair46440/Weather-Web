@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cinematic Weather App</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: url('images/all.jpg') no-repeat center center/cover;
+      background-size: cover;
+      background-position: center;
+      transition: background 0.5s ease-in-out;
+    }
+
+    .nav {
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 1rem;
+      text-align: center;
+      font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(15px);
+      padding: 2rem;
+      border-radius: 20px;
+      color: #fff;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      animation: fadeIn 1s ease;
+      margin: auto;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .search-bar {
+      display: flex;
+      margin-bottom: 1.5rem;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 10px 0 0 10px;
+      font-size: 1rem;
+    }
+
+    .search-bar button {
+      padding: 0.75rem 1rem;
+      border: none;
+      background: #00c6ff;
+      color: #fff;
+      border-radius: 0 10px 10px 0;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .weather-icon {
+      width: 100px;
+      margin: 1rem auto;
+    }
+
+    .info {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .error {
+      background: rgba(255, 0, 0, 0.3);
+      padding: 0.75rem;
+      margin-top: 1rem;
+      border-radius: 10px;
+      display: none;
+    }
+
+    .details {
+      margin-top: 1.5rem;
+      display: flex;
+      justify-content: space-around;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .detail-item {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 1rem;
+      border-radius: 12px;
+      min-width: 120px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="nav">Weather Web System</div>
+
+  <div class="container">
+    <div class="search-bar">
+      <input type="text" id="cityInput" placeholder="Enter city">
+      <button onclick="getWeather()">Search</button>
+    </div>
+
+    <div class="error" id="errorBox">City not found</div>
+
+    <div id="weatherContainer" style="display:none">
+      <img id="weatherIcon" class="weather-icon" src="" alt="Weather icon">
+      <h2 id="cityName"></h2>
+      <div class="info" id="temp"></div>
+      <div class="info" id="description"></div>
+      <div class="details">
+        <div class="detail-item">Feels Like: <span id="feels"></span></div>
+        <div class="detail-item">Humidity: <span id="humidity"></span></div>
+        <div class="detail-item">Wind: <span id="wind"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = 'ca695dcbc66c5fa3d0cb955033fd918f';
+
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value.trim();
+      const errorBox = document.getElementById('errorBox');
+      const weatherContainer = document.getElementById('weatherContainer');
+
+      if (!city) {
+        errorBox.textContent = "Please enter a city name.";
+        errorBox.style.display = "block";
+        weatherContainer.style.display = "none";
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+        const data = await res.json();
+
+        if (data.cod !== 200) throw new Error(data.message);
+
+        const weather = data.weather[0].main.toLowerCase();
+        setBackground(weather);
+
+        document.getElementById('cityName').textContent = `${data.name}, ${data.sys.country}`;
+        document.getElementById('temp').textContent = `${data.main.temp}°C`;
+        document.getElementById('feels').textContent = `${data.main.feels_like}°C`;
+        document.getElementById('humidity').textContent = `${data.main.humidity}%`;
+        document.getElementById('wind').textContent = `${data.wind.speed} km/h`;
+        document.getElementById('description').textContent = data.weather[0].description;
+        document.getElementById('weatherIcon').src = `https://openweathermap.org/img/wn/${data.weather[0].icon}@4x.png`;
+
+        errorBox.style.display = "none";
+        weatherContainer.style.display = "block";
+
+      } catch (err) {
+        weatherContainer.style.display = "none";
+        errorBox.textContent = `Error: ${err.message}`;
+        errorBox.style.display = "block";
+      }
+    }
+
+    function setBackground(weather) {
+      let bg;
+      switch (weather) {
+        case 'clear':
+          bg = 'url(images/clear.jpg)';
+          break;
+        case 'clouds':
+          bg = 'url(images/cloudy.jpg)';
+          break;
+        case 'rain':
+          bg = 'url(images/rainy.jpg)';
+          break;
+        case 'drizzle':
+          bg = 'url(images/dezzle.jpg)';
+          break;
+        case 'snow':
+          bg = 'url(images/show.jpg)';
+          break;
+        case 'thunderstorm':
+          bg = 'url(images/thunderstrom.jpg)';
+          break;
+        default:
+          bg = 'url(images/all.jpg)';
+      }
+      document.body.style.background = `${bg} no-repeat center center / cover`;
+    }
+  </script>
+</body>
+
+</html>
